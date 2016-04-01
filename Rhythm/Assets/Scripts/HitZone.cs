@@ -75,8 +75,10 @@ public class HitZone : MonoBehaviour
 			Note playerNote = (Note)col.gameObject.GetComponent(typeof(Note));
 			if (!playerNote.isPlaying)
 			{
-
-				playerNotes.Add(playerNote);
+				if (playerNotes.Count == 0 || playerNote != playerNotes[playerNotes.Count - 1])
+				{
+					playerNotes.Add(playerNote);
+				}
 				if (playerNote == playerNotes[0]) {
 					playerNote.play();
 					StartCoroutine("scoring");
@@ -102,10 +104,12 @@ public class HitZone : MonoBehaviour
 		}
 	}
 
-	public void activate(InputControl control)
+	public void activate(InputControl control, Material mat)
 	{
-		GetComponent<Renderer>().material = activeMat;
 		active = true;
+		if (control1 == null && control2 == null) {
+			GetComponent<Renderer>().material = mat;
+		}
 		if (control1 == null)
 		{
 			control1 = control;
@@ -115,13 +119,17 @@ public class HitZone : MonoBehaviour
 		}
 	}
 
-	public void deactivate(InputControl control)
+	public void deactivate(InputControl control, Material mat)
 	{
 		if (control == control1) {
 			control1 = null;
+			GetComponent<Renderer>().material = mat;
+
 		}
 		else if (control == control2) {
 			control2 = null;
+			GetComponent<Renderer>().material = mat;
+
 		}
 
 		if (control1 == null && control2 == null)

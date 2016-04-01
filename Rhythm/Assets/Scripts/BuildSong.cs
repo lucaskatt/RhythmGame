@@ -15,7 +15,6 @@ public class BuildSong : MonoBehaviour {
 	private Transform buttonGrid;
 	public GameObject layoutButtonPrefab;
 	public GameObject songPrefab;
-	public GameObject notePrefab;
 	public Canvas songUiPrefab;
 	public BuildPolygon polygonBuilder;
 	public Player playerPrefab;
@@ -109,20 +108,9 @@ public class BuildSong : MonoBehaviour {
 					{
 						print("get duration failed");
 					}
-					GameObject noteObject;
-					if (id == playerId)
-					{
-						noteObject = Instantiate(notePrefab, new Vector3(100, 100), Quaternion.identity) as GameObject;
-					}
-					else
-					{
-						noteObject = Instantiate(notePrefab, new Vector3(100, 100), Quaternion.identity) as GameObject;
-					}
 					if (duration != 0)
 					{
-						Note newNote = (Note)noteObject.GetComponent(typeof(Note));
-						newNote.init(step, duration, audioPlayer);
-						song.addNote(newNote);
+						song.addNote(step, duration, audioPlayer);
 					}
 				}
 
@@ -159,21 +147,9 @@ public class BuildSong : MonoBehaviour {
 						print("get octave failed");
 					}
 					bool chord = note.SelectSingleNode("chord") != null;
-
-					GameObject noteObject;
-          if (id == playerId)
-					{
-						noteObject = Instantiate(notePrefab, new Vector3(100, 100), Quaternion.identity) as GameObject;
-					}
-					else
-					{
-						noteObject = Instantiate(notePrefab, new Vector3(100, 100), Quaternion.identity) as GameObject;
-					}
 					if (duration != 0)
 					{
-						Note newNote = (Note)noteObject.GetComponent(typeof(Note));
-						newNote.init(step, duration, audioPlayer, alter, octave, chord);
-						song.addNote(newNote);
+						song.addNote(step, duration, audioPlayer, alter, octave, chord);
 					}
 				}
 

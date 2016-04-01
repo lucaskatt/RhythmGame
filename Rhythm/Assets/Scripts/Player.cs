@@ -4,9 +4,12 @@ using InControl;
 using UnityEngine.UI;
 
 public class Player : MonoBehaviour {
-	public GameObject cursorPrefab;
+	public GameObject leftCursorPrefab;
+	public GameObject rightCursorPrefab;
 	private GameObject leftCursor;
 	private GameObject rightCursor;
+	private GameObject leftCursorVisible;
+	private GameObject rightCursorVisible;
 	private InputDevice device;
 	public BuildPolygon polygonBuilder;
 	private float sideLength;
@@ -18,8 +21,14 @@ public class Player : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		leftCursor = Instantiate(cursorPrefab);
-		rightCursor = Instantiate(cursorPrefab);
+		leftCursor = Instantiate(leftCursorPrefab);
+		rightCursor = Instantiate(rightCursorPrefab);
+		leftCursor.GetComponent<MeshRenderer>().enabled = false;
+		rightCursor.GetComponent<MeshRenderer>().enabled = false;
+		leftCursorVisible = Instantiate(leftCursorPrefab);
+		rightCursorVisible = Instantiate(rightCursorPrefab);
+		rightCursorVisible.transform.position = new Vector3(0, 0, 1);
+
 		sideLength = polygonBuilder.sideLength;
 		scoreText = songUi.transform.FindChild("Score").GetComponent<Text>();
 	}
@@ -37,8 +46,10 @@ public class Player : MonoBehaviour {
 			if (device.LeftStick.Value[0] == 0 && device.LeftStick.Value[1] == 0)
 			{
 				leftCursor.transform.position = Vector3.zero;
+				leftCursorVisible.transform.position = Vector3.zero;
+
 				if (activeZoneLeft != null) {
-					activeZoneLeft.deactivate(device.LeftBumper);
+					activeZoneLeft.deactivate(device.LeftBumper, rightCursor.GetComponent<Renderer>().material);
 					activeZoneLeft = null;
 				}
 			}
@@ -48,6 +59,8 @@ public class Player : MonoBehaviour {
 				angle = -angle * 180 / Mathf.PI;
 				leftCursor.transform.position = new Vector3(0, 3.8637f * sideLength / 2 + 1, 0);
 				leftCursor.transform.RotateAround(Vector3.zero, Vector3.forward, angle);
+				leftCursorVisible.transform.position = new Vector3(0, 3.8637f * sideLength / 2 - 0.75f, 0);
+				leftCursorVisible.transform.RotateAround(Vector3.zero, Vector3.forward, angle);
 
 				int layerMask = 1 << 8;
 				RaycastHit hit;
@@ -56,9 +69,9 @@ public class Player : MonoBehaviour {
 					HitZone newZone = (HitZone)hit.transform.GetComponent(typeof(HitZone));
 					if (activeZoneLeft != newZone) {
 						if (activeZoneLeft != null) {
-							activeZoneLeft.deactivate(device.LeftBumper);
+							activeZoneLeft.deactivate(device.LeftBumper, rightCursor.GetComponent<Renderer>().material);
 						}
-						newZone.activate(device.LeftBumper);
+						newZone.activate(device.LeftBumper, leftCursor.GetComponent<Renderer>().material);
 						activeZoneLeft = newZone;
 					}
 				}
@@ -69,9 +82,11 @@ public class Player : MonoBehaviour {
 			if (device.RightStick.Value[0] == 0 && device.RightStick.Value[1] == 0)
 			{
 				rightCursor.transform.position = Vector3.zero;
+				rightCursorVisible.transform.position = new Vector3(0, 0, 1);
+
 				if (activeZoneRight != null)
 				{
-					activeZoneRight.deactivate(device.RightBumper);
+					activeZoneRight.deactivate(device.RightBumper, leftCursor.GetComponent<Renderer>().material);
 					activeZoneRight = null;
 				}
 			}
@@ -81,6 +96,8 @@ public class Player : MonoBehaviour {
 				angle = -angle * 180 / Mathf.PI;
 				rightCursor.transform.position = new Vector3(0, 3.8637f * sideLength / 2 + 1, 0);
 				rightCursor.transform.RotateAround(Vector3.zero, Vector3.forward, angle);
+				rightCursorVisible.transform.position = new Vector3(0, 3.8637f * sideLength / 2 - 0.75f, 1);
+				rightCursorVisible.transform.RotateAround(Vector3.zero, Vector3.forward, angle);
 
 				int layerMask = 1 << 8;
 				RaycastHit hit;
@@ -91,9 +108,9 @@ public class Player : MonoBehaviour {
 					{
 						if (activeZoneRight != null)
 						{
-							activeZoneRight.deactivate(device.RightBumper);
+							activeZoneRight.deactivate(device.RightBumper, leftCursor.GetComponent<Renderer>().material);
 						}
-						newZone.activate(device.RightBumper);
+						newZone.activate(device.RightBumper, rightCursor.GetComponent<Renderer>().material);
 						activeZoneRight = newZone;
 					}
 				}

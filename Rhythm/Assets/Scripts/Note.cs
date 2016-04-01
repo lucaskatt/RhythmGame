@@ -12,7 +12,7 @@ public class Note : MonoBehaviour
 	private int noteNumber;
 	private AudioPlayer player;
 	private Rigidbody rigid;
-	public static float startDist = 30f;
+	public static float startDist = 15f;
 	public bool isPlaying = false;
 	private float speed;
 
@@ -20,15 +20,15 @@ public class Note : MonoBehaviour
 		rigid = GetComponent<Rigidbody>();
 	}
 
-	public void init(string _step, int _duration, AudioPlayer _player, int _alter = 0, int _octave = 0, bool _chord = false)
-	{
-		step = _step[0];
-		alter = _alter;
-		octave = _octave;
-		duration = _duration;
-		chord = _chord;
-		player = _player;
-		buildKey();
+	public void init(Song.NoteStruct noteStruct)	{
+		step = noteStruct.step;
+		alter = noteStruct.alter;
+		octave = noteStruct.octave;
+		duration = noteStruct.duration;
+		chord = noteStruct.chord;
+		player = noteStruct.player;
+		key = noteStruct.key;
+		noteNumber = noteStruct.noteNumber;
 	}
 
 	public int getNoteNumber()
@@ -87,156 +87,14 @@ public class Note : MonoBehaviour
 			float yScale = (speed * playTime - hitDist);
 			transform.localScale = new Vector3(0.8f, yScale, 0.1f);
 			transform.position = new Vector3(0, startDist + yScale / 2, 0);
+			transform.rotation = Quaternion.identity;
 			transform.RotateAround(Vector3.zero, Vector3.forward, 30 * noteNumber);
 			Vector3 norm = (Vector3.zero - transform.position).normalized;
 			GetComponent<Rigidbody>().velocity = norm * speed;
 		}
 	}
 
-	private void buildKey()
-	{
-		switch (getStep())
-		{
-			case 'A':
-				if (getAlter() <= -1)
-				{
-					key = "G#";
-					noteNumber = 8;
-				}
-				else if (getAlter() >= 1)
-				{
-					key = "A#";
-					noteNumber = 10;
-				}
-				else
-				{
-					key = "A";
-					noteNumber = 9;
-				}
-				break;
-			case 'B':
-				if (getAlter() <= -1)
-				{
-					key = "A#";
-					noteNumber = 10;
-				}
-				else if (getAlter() >= 1)
-				{
-					key = "C";
-					noteNumber = 0;
-				}
-				else
-				{
-					key = "B";
-					noteNumber = 11;
-				}
-				break;
-			case 'C':
-				if (getAlter() <= -1)
-				{
-					key = "B";
-					noteNumber = 11;
-				}
-				else if (getAlter() >= 1)
-				{
-					key = "C#";
-					noteNumber = 1;
-				}
-				else
-				{
-					key = "C";
-					noteNumber = 0;
-				}
-				break;
-			case 'D':
-				if (getAlter() <= -1)
-				{
-					key = "C#";
-					noteNumber = 1;
-				}
-				else if (getAlter() >= 1)
-				{
-					key = "D#";
-					noteNumber = 3;
-				}
-				else
-				{
-					key = "D";
-					noteNumber = 2;
-				}
-				break;
-			case 'E':
-				if (getAlter() <= -1)
-				{
-					key = "D#";
-					noteNumber = 3;
-				}
-				else if (getAlter() >= 1)
-				{
-					key = "F";
-					noteNumber = 5;
-				}
-				else
-				{
-					key = "E";
-					noteNumber = 4;
-				}
-				break;
-			case 'F':
-				if (getAlter() <= -1)
-				{
-					key = "E";
-					noteNumber = 4;
-				}
-				else if (getAlter() >= 1)
-				{
-					key = "F#";
-					noteNumber = 6;
-				}
-				else
-				{
-					key = "F";
-					noteNumber = 5;
-				}
-				break;
-			case 'G':
-				if (getAlter() <= -1)
-				{
-					key = "F#";
-					noteNumber = 6;
-				}
-				else if (getAlter() >= 1)
-				{
-					key = "G#";
-					noteNumber = 8;
-				}
-				else
-				{
-					key = "G";
-					noteNumber = 7;
-				}
-				break;
-			default:
-				key = "" + getStep();
-				noteNumber = -1;
-				break;
-		}
-
-		//get octave
-		if (getOctave() < 1)
-		{
-			key += "1";
-		}
-		else if (getOctave() > 7)
-		{
-			key += "7";
-		}
-		else
-		{
-			key += "" + getOctave();
-		}
-		key += " (1)";
-	}
+	
 
 	
 	void OnTriggerStay(Collider col)

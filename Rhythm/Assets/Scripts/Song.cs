@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Song : MonoBehaviour {
-	private List<Note> song = new List<Note>();
+	private List<NoteStruct> song = new List<NoteStruct>();
 	private float bps;
 	private int divisions;
 	private int beatType;
@@ -13,6 +13,189 @@ public class Song : MonoBehaviour {
 	bool playerPart = true;
 	private float beatFactor;
 	private float noteDelay;
+	public int poolSize = 20;
+	private List<Note> pool = new List<Note>();
+	private int poolPos = 0;
+	public GameObject notePrefab;
+
+	public struct NoteStruct{
+		public char step;
+		public int duration;
+		public AudioPlayer player;
+		public int alter;
+		public int octave;
+		public bool chord;
+		public string key;
+		public int noteNumber;
+
+		public NoteStruct(string _step, int _duration, AudioPlayer _player, int _alter = 0, int _octave = 0, bool _chord = false)
+		{
+			step = _step[0];
+			alter = _alter;
+			octave = _octave;
+			duration = _duration;
+			chord = _chord;
+			player = _player;
+			key = "";
+			noteNumber = 0;
+			buildKey();
+		}
+
+		private void buildKey()
+		{
+			switch (step)
+			{
+				case 'A':
+					if (alter <= -1)
+					{
+						key = "G#";
+						noteNumber = 8;
+					}
+					else if (alter >= 1)
+					{
+						key = "A#";
+						noteNumber = 10;
+					}
+					else
+					{
+						key = "A";
+						noteNumber = 9;
+					}
+					break;
+				case 'B':
+					if (alter <= -1)
+					{
+						key = "A#";
+						noteNumber = 10;
+					}
+					else if (alter >= 1)
+					{
+						key = "C";
+						noteNumber = 0;
+					}
+					else
+					{
+						key = "B";
+						noteNumber = 11;
+					}
+					break;
+				case 'C':
+					if (alter <= -1)
+					{
+						key = "B";
+						noteNumber = 11;
+					}
+					else if (alter >= 1)
+					{
+						key = "C#";
+						noteNumber = 1;
+					}
+					else
+					{
+						key = "C";
+						noteNumber = 0;
+					}
+					break;
+				case 'D':
+					if (alter <= -1)
+					{
+						key = "C#";
+						noteNumber = 1;
+					}
+					else if (alter >= 1)
+					{
+						key = "D#";
+						noteNumber = 3;
+					}
+					else
+					{
+						key = "D";
+						noteNumber = 2;
+					}
+					break;
+				case 'E':
+					if (alter <= -1)
+					{
+						key = "D#";
+						noteNumber = 3;
+					}
+					else if (alter >= 1)
+					{
+						key = "F";
+						noteNumber = 5;
+					}
+					else
+					{
+						key = "E";
+						noteNumber = 4;
+					}
+					break;
+				case 'F':
+					if (alter <= -1)
+					{
+						key = "E";
+						noteNumber = 4;
+					}
+					else if (alter >= 1)
+					{
+						key = "F#";
+						noteNumber = 6;
+					}
+					else
+					{
+						key = "F";
+						noteNumber = 5;
+					}
+					break;
+				case 'G':
+					if (alter <= -1)
+					{
+						key = "F#";
+						noteNumber = 6;
+					}
+					else if (alter >= 1)
+					{
+						key = "G#";
+						noteNumber = 8;
+					}
+					else
+					{
+						key = "G";
+						noteNumber = 7;
+					}
+					break;
+				default:
+					key = "" + step;
+					noteNumber = -1;
+					break;
+			}
+
+			//get octave
+			if (octave < 1)
+			{
+				key += "1";
+			}
+			else if (octave > 7)
+			{
+				key += "7";
+			}
+			else
+			{
+				key += "" + octave;
+			}
+			key += " (1)";
+		}
+
+		public void play() {
+			player.startNoteStructAudio(this);
+		}
+
+		public void stop()
+		{
+			player.stopNoteStructAudio(this);
+		}
+
+	};
 
 	public void init(int _bpm, int _divisions, int _beatType, bool _playerPart) {
 		bps = _bpm / 60f;
@@ -21,7 +204,17 @@ public class Song : MonoBehaviour {
 		nextNote = 0;
 		playerPart = _playerPart;
 		noteDelay = (Note.startDist - (3.8637f * polygonBuilder.sideLength / 2) - polygonBuilder.hitSizeY / 2) / noteSpeed;
-    song = new List<Note>();
+		if (playerPart)
+		{
+			song = new List<NoteStruct>();
+
+			for (int i = 0; i < poolSize; i++)
+			{
+				GameObject noteObject = Instantiate(notePrefab, new Vector3(100, 100), Quaternion.identity) as GameObject;
+				Note note = (Note)noteObject.GetComponent(typeof(Note));
+				pool.Add(note);
+			}
+		}
 	}
 
 	// Use this for initialization
@@ -34,8 +227,8 @@ public class Song : MonoBehaviour {
 	
 	}
 
-	public void addNote(Note note) {
-		song.Add(note);
+	public void addNote(string step, int duration, AudioPlayer audioPlayer, int alter=0, int octave=0, bool chord=false) {
+		song.Add(new NoteStruct(step, duration, audioPlayer, alter, octave, chord));
 	}
 
 	public void playSong() {
@@ -46,29 +239,35 @@ public class Song : MonoBehaviour {
 		}
 	}
 
-	IEnumerator playNote(Note note) {
+	IEnumerator playNote(NoteStruct noteStruct) {
 		++nextNote;
 		//check for rests
 		//start playing note
 		if (playerPart)
 		{
-			note.startMovement(noteSpeed, polygonBuilder.hitSizeY, playTime(note));
+			Note note = pool[poolPos];
+			poolPos++;
+			if (poolPos >= poolSize) {
+				poolPos = 0;
+			}
+			note.init(noteStruct);
+			note.startMovement(noteSpeed, polygonBuilder.hitSizeY, playTimeNote(note));
 		}
 		else {
-			StartCoroutine(playNoteDelayed(note, noteDelay));
+			StartCoroutine(playNoteDelayed(noteStruct, noteDelay));
 		}
 		//check for chords
-		if (nextNote < song.Count && song[nextNote].isChord())
+		if (nextNote < song.Count && song[nextNote].chord)
 		{
 			StartCoroutine(playNoteSingle(song[nextNote]));
 			++nextNote;
-			while (song[nextNote].isChord() && nextNote < song.Count)
+			while (song[nextNote].chord && nextNote < song.Count)
 			{
 				++nextNote;
 			}
 		}
 
-		yield return new WaitForSeconds(playTime(note));
+		yield return new WaitForSeconds(playTimeNoteStruct(noteStruct));
 
 		if (nextNote < song.Count)
 		{
@@ -79,27 +278,38 @@ public class Song : MonoBehaviour {
 		}
 	}
 
-	IEnumerator playNoteSingle(Note note) {
+	IEnumerator playNoteSingle(NoteStruct noteStruct) {
 		//start playing note
 		if (playerPart)
 		{
-			note.startMovement(noteSpeed, polygonBuilder.hitSizeY, playTime(note));
+			Note note = pool[poolPos];
+			poolPos++;
+			if (poolPos >= poolSize)
+			{
+				poolPos = 0;
+			}
+			note.init(noteStruct);
+			note.startMovement(noteSpeed, polygonBuilder.hitSizeY, playTimeNote(note));
 		}
 		else
 		{
-			StartCoroutine(playNoteDelayed(note, noteDelay));
+			StartCoroutine(playNoteDelayed(noteStruct, noteDelay));
 		}
 		yield return null;
 	}
 
-	IEnumerator playNoteDelayed(Note note, float delay) {
+	IEnumerator playNoteDelayed(NoteStruct noteStruct, float delay) {
 		yield return new WaitForSeconds(delay);
-		note.play();
-		yield return new WaitForSeconds(playTime(note));
-		note.stop();
+		noteStruct.play();
+		yield return new WaitForSeconds(playTimeNoteStruct(noteStruct));
+		noteStruct.stop();
 	}
 
-	private float playTime(Note note) {
+	private float playTimeNote(Note note) {
 		return note.getDuration() * beatFactor;
+	}
+
+	private float playTimeNoteStruct(NoteStruct noteStruct) {
+		return noteStruct.duration * beatFactor;
 	}
 }

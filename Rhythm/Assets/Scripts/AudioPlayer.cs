@@ -30,6 +30,22 @@ public class AudioPlayer : MonoBehaviour {
 		}
 	}
 
+	public void startNoteStructAudio(Song.NoteStruct note)
+	{
+		if (note.step != 'R')
+		{
+			keys[note.key].Play();
+		}
+	}
+
+	public void stopNoteStructAudio(Song.NoteStruct note)
+	{
+		if (note.step != 'R')
+		{
+			keys[note.key].Stop();
+		}
+	}
+
 
 	public void assignKeys() {
 		foreach(Transform child in transform) {
