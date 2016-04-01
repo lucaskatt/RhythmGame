@@ -9,7 +9,7 @@ public class BuildPolygon : MonoBehaviour {
 	public GameObject circleRendererPrefab;
 	public int numCircles = 3;
 	public float separation = 1f;
-	private float startRadius = 2f;
+	//private float startRadius = 2f;
 
 	// Use this for initialization
 	void Start () {

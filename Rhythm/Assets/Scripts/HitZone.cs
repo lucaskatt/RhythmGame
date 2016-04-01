@@ -12,6 +12,7 @@ public class HitZone : MonoBehaviour
 	private InputControl control2 = null;
 	private List<Note> playerNotes = new List<Note>();
 	public Player player;
+	//private ParticleSystem particle;
 
 
 
@@ -19,6 +20,7 @@ public class HitZone : MonoBehaviour
 	void Start()
 	{
 		GetComponent<Renderer>().material = inactiveMat;
+		//particle = GetComponent<ParticleSystem>();
 	}
 
 	// Update is called once per frame
@@ -27,51 +29,15 @@ public class HitZone : MonoBehaviour
 
 	}
 
+	void OnTriggerEnter(Collider col) {
+		if (col.gameObject.tag == "Note") {
+			Note note = (Note)col.gameObject.GetComponent(typeof(Note));
+			note.traveling = false;
+		}
+	}
+
 	 void OnTriggerStay(Collider col) {
 		if (active && col.gameObject.tag == "Note") {
-			/*
-			if (control1 != null)
-			{
-				if (control1.State != control1.LastState)
-				{
-					
-					if (control1.State)
-					{
-						playerNote = (Note)col.gameObject.GetComponent(typeof(Note));
-						playerNote.play();
-						StartCoroutine("scoring");
-					}
-					else
-					{
-						if (playerNote != null)
-						{
-							playerNote.stop();
-							StopCoroutine("scoring");
-						}
-					}
-				}
-			}
-			if (control2 != null)
-			{
-				if (control2.State != control2.LastState)
-				{
-					if (control2.State)
-					{
-						playerNote = (Note)col.gameObject.GetComponent(typeof(Note));
-						playerNote.play();
-						StartCoroutine("scoring");
-					}
-					else
-					{
-						if (playerNote != null)
-						{
-							playerNote.stop();
-							StopCoroutine("scoring");
-						}
-					}
-				}
-			}
-			*/
 			Note playerNote = (Note)col.gameObject.GetComponent(typeof(Note));
 			if (!playerNote.isPlaying)
 			{
@@ -82,6 +48,7 @@ public class HitZone : MonoBehaviour
 				if (playerNote == playerNotes[0]) {
 					playerNote.play();
 					StartCoroutine("scoring");
+					//particle.Play();
 				}
 			}
 		}
@@ -95,10 +62,12 @@ public class HitZone : MonoBehaviour
 			{
 				note.stop();
 				StopCoroutine("scoring");
+				//particle.Stop();
 				playerNotes.RemoveAt(0);
 				if (playerNotes.Count > 0) {
 					playerNotes[0].play();
 					StartCoroutine("scoring");
+					//particle.Play();
 				}
 			}
 		}
@@ -141,6 +110,7 @@ public class HitZone : MonoBehaviour
 				{
 					playerNote.stop();
 					StopCoroutine("scoring");
+					//particle.Stop();
 				}
 			}
 			playerNotes.Clear();

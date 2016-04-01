@@ -12,12 +12,25 @@ public class Note : MonoBehaviour
 	private int noteNumber;
 	private AudioPlayer player;
 	private Rigidbody rigid;
-	public static float startDist = 15f;
+	public static float startDist = 10f;
 	public bool isPlaying = false;
 	private float speed;
+	public bool traveling = false;
+	public Color color;
+	private float alphaRate = 0.001f;
+	private Color newColor;
 
 	void Start() {
 		rigid = GetComponent<Rigidbody>();
+		newColor = color;
+	}
+
+	void FixedUpdate() {
+		if (traveling) {
+			newColor = new Color(newColor.r, newColor.g, newColor.b, newColor.a + alphaRate);
+			GetComponent<Renderer>().material.SetColor("_TintColor", newColor);
+
+		}
 	}
 
 	public void init(Song.NoteStruct noteStruct)	{
@@ -91,6 +104,10 @@ public class Note : MonoBehaviour
 			transform.RotateAround(Vector3.zero, Vector3.forward, 30 * noteNumber);
 			Vector3 norm = (Vector3.zero - transform.position).normalized;
 			GetComponent<Rigidbody>().velocity = norm * speed;
+			GetComponent<Renderer>().material.SetColor("_TintColor", color);
+			newColor = color;
+
+			traveling = true;
 		}
 	}
 
