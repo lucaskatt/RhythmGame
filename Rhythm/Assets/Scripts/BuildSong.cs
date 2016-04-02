@@ -62,7 +62,14 @@ public class BuildSong : MonoBehaviour {
 		foreach (string id in partList)
 		{
 			XmlNode part = xmlDoc.SelectSingleNode("//part[@id='" + id + "']");
-			XmlNode attributes = part.SelectSingleNode("measure[@number='1']/attributes");
+			XmlNode attributes;
+			if (part.SelectSingleNode("measure[@number='0']/attributes") != null)
+			{
+				attributes = part.SelectSingleNode("measure[@number='0']/attributes");
+			}
+			else {
+				attributes = part.SelectSingleNode("measure[@number='1']/attributes");
+			}
 
 			int divisions = 0;
 			if (!int.TryParse(attributes.SelectSingleNode("divisions").InnerText, out divisions))
@@ -70,10 +77,13 @@ public class BuildSong : MonoBehaviour {
 				print("divisions select failed");
 			}
 
-			int beatType = 0;
-			if (!int.TryParse(attributes.SelectSingleNode("time/beat-type").InnerText, out beatType))
+			int beatType = 4;
+			if (attributes.SelectSingleNode("time") != null)
 			{
-				print("beatType select failed");
+				if (!int.TryParse(attributes.SelectSingleNode("time/beat-type").InnerText, out beatType))
+				{
+					print("beatType select failed");
+				}
 			}
 
 			GameObject songObject = Instantiate(songPrefab);

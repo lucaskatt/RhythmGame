@@ -19,12 +19,11 @@ public class Note : MonoBehaviour
 	public Color color;
 	private float alphaRate = 0.001f;
 	private Color newColor;
-	private Light pointLight;
+
 
 	void Start() {
 		rigid = GetComponent<Rigidbody>();
 		newColor = color;
-		pointLight = GetComponent<Light>();
 	}
 
 	void FixedUpdate() {
@@ -85,14 +84,12 @@ public class Note : MonoBehaviour
 	{
 		isPlaying = true;
 		player.startNoteAudio(this);
-		pointLight.enabled = true;
 	}
 
 	public void stop()
 	{
 		isPlaying = false;
 		player.stopNoteAudio(this);
-		pointLight.enabled = false;
 	}
 
 	public void startMovement(float _speed, float hitDist, float playTime)

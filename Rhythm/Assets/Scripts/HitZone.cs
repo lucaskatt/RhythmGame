@@ -12,6 +12,7 @@ public class HitZone : MonoBehaviour
 	private InputControl control2 = null;
 	private List<Note> playerNotes = new List<Note>();
 	public Player player;
+	private Light pointLight;
 	//private ParticleSystem particle;
 
 
@@ -20,6 +21,8 @@ public class HitZone : MonoBehaviour
 	void Start()
 	{
 		GetComponent<Renderer>().material = inactiveMat;
+		pointLight = GetComponent<Light>();
+
 		//particle = GetComponent<ParticleSystem>();
 	}
 
@@ -48,7 +51,7 @@ public class HitZone : MonoBehaviour
 				if (playerNote == playerNotes[0]) {
 					playerNote.play();
 					StartCoroutine("scoring");
-					//particle.Play();
+					pointLight.enabled = true;
 				}
 			}
 		}
@@ -62,12 +65,12 @@ public class HitZone : MonoBehaviour
 			{
 				note.stop();
 				StopCoroutine("scoring");
-				//particle.Stop();
+				pointLight.enabled = false;
 				playerNotes.RemoveAt(0);
 				if (playerNotes.Count > 0) {
 					playerNotes[0].play();
 					StartCoroutine("scoring");
-					//particle.Play();
+					pointLight.enabled = true;
 				}
 			}
 		}
@@ -110,7 +113,7 @@ public class HitZone : MonoBehaviour
 				{
 					playerNote.stop();
 					StopCoroutine("scoring");
-					//particle.Stop();
+					pointLight.enabled = false;
 				}
 			}
 			playerNotes.Clear();
