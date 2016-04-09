@@ -17,6 +17,7 @@ public class Song : MonoBehaviour {
 	private List<Note> pool = new List<Note>();
 	private int poolPos = 0;
 	public GameObject notePrefab;
+	private bool paused = false;
 
 	public struct NoteStruct{
 		public char step;
@@ -186,8 +187,8 @@ public class Song : MonoBehaviour {
 			key += " (1)";
 		}
 
-		public void play() {
-			player.startNoteStructAudio(this);
+		public void play(float playTime) {
+			player.startNoteStructAudio(this, playTime);
 		}
 
 		public void stop()
@@ -241,11 +242,11 @@ public class Song : MonoBehaviour {
 
 	IEnumerator playNote(NoteStruct noteStruct) {
 		++nextNote;
-		//check for rests
 		//start playing note
+		Note note = null;
 		if (playerPart)
 		{
-			Note note = pool[poolPos];
+			note = pool[poolPos];
 			poolPos++;
 			if (poolPos >= poolSize) {
 				poolPos = 0;
@@ -259,6 +260,10 @@ public class Song : MonoBehaviour {
 		//check for chords
 		if (nextNote < song.Count && song[nextNote].chord)
 		{
+			if (note != null)
+			{
+				note.chordColor();
+			}
 			StartCoroutine(playNoteSingle(song[nextNote]));
 			++nextNote;
 			while (song[nextNote].chord && nextNote < song.Count)
@@ -290,6 +295,7 @@ public class Song : MonoBehaviour {
 			}
 			note.init(noteStruct);
 			note.startMovement(noteSpeed, polygonBuilder.hitSizeY, playTimeNote(note));
+			note.chordColor();
 		}
 		else
 		{
@@ -300,8 +306,9 @@ public class Song : MonoBehaviour {
 
 	IEnumerator playNoteDelayed(NoteStruct noteStruct, float delay) {
 		yield return new WaitForSeconds(delay);
-		noteStruct.play();
-		yield return new WaitForSeconds(playTimeNoteStruct(noteStruct));
+		float playTime = playTimeNoteStruct(noteStruct);
+		noteStruct.play(playTime);
+		yield return new WaitForSeconds(playTime);
 		noteStruct.stop();
 	}
 
@@ -311,5 +318,21 @@ public class Song : MonoBehaviour {
 
 	private float playTimeNoteStruct(NoteStruct noteStruct) {
 		return noteStruct.duration * beatFactor;
+	}
+
+	public void destroy() {
+		foreach(Note note in pool) {
+			note.stop();
+			Destroy(note.gameObject);
+		}
+		Destroy(gameObject);
+	}
+
+	public void pause() {
+		paused = true;
+		foreach (Note note in pool)
+		{
+			note.stop();
+		}
 	}
 }

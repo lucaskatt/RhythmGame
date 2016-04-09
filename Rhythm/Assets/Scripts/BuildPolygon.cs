@@ -9,7 +9,7 @@ public class BuildPolygon : MonoBehaviour {
 	public GameObject circleRendererPrefab;
 	public int numCircles = 3;
 	public float separation = 1f;
-	//private float startRadius = 2f;
+	private float startRadius = 2f;
 
 	// Use this for initialization
 	void Start () {
@@ -23,6 +23,7 @@ public class BuildPolygon : MonoBehaviour {
 	public void build() {
 		for(int i = 0; i < 12; ++i) {
 			GameObject side = Instantiate(sidePrefab);
+			side.transform.SetParent(transform);
 			HitZone hitZone = (HitZone) side.GetComponent(typeof(HitZone));
 			hitZone.player = player;
 			side.transform.localScale = new Vector3(sideLength, hitSizeY, 0.1f);
@@ -30,12 +31,13 @@ public class BuildPolygon : MonoBehaviour {
 			side.transform.RotateAround(Vector3.zero, Vector3.forward, 30f * i);
 		}
 
-		/*
+		
 		for (int i = 0; i < numCircles; ++i) {
 			GameObject circleRenderer = Instantiate(circleRendererPrefab);
+			circleRenderer.transform.SetParent(transform);
 			DrawCircle drawCircle = (DrawCircle)circleRenderer.GetComponent(typeof(DrawCircle));
 			drawCircle.draw(startRadius + (i+1) * separation);
     }
-		*/
+		
 	}
 }

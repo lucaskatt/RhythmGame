@@ -4,6 +4,7 @@ using System.Xml;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class BuildSong : MonoBehaviour {
 	public List<TextAsset> sheets;
@@ -11,27 +12,51 @@ public class BuildSong : MonoBehaviour {
 	private int bpm;
 	private TextAsset sheet;
 	private XmlDocument xmlDoc;
-	public Canvas choosePart;
+	private Canvas choosePart;
+	public Canvas choosePartPrefab;
 	private Transform buttonGrid;
 	public GameObject layoutButtonPrefab;
 	public GameObject songPrefab;
 	public Canvas songUiPrefab;
-	public BuildPolygon polygonBuilder;
+	private BuildPolygon polygonBuilder;
 	public Player playerPrefab;
 	public GameObject audioPlayerPrefab;
 	private List<string> partList = new List<string>();
-	public Canvas chooseSong;
+	private Canvas chooseSong;
+	public Canvas chooseSongPrefab;
+	public BuildPolygon polygonBuilderPrefab;
+	public GameObject titleScreenPrefab;
+	public GameObject instructionsPrefab;
+	private GameObject instructions;
+	private List<Song> songList = new List<Song>();
+	private Player player;
+	private Canvas songUi;
+	private GameObject pauseMenu;
+	public GameObject pauseMenuPrefab;
+	private float prevFixedDeltaTime;
+	private string playerPartId;
+	private List<GameObject> audioPlayers = new List<GameObject>();
+
 
 	// Use this for initialization
 	void Start () {
-		choosePart.enabled = false;
+		chooseSong = Instantiate(chooseSongPrefab);
+		int i = 0;
+		foreach (Transform child in chooseSong.transform.FindChild("Songs").transform) {
+			int index = i;
+			child.GetComponent<Button>().onClick.AddListener(() => selectSong(index));
+			i++;
+		}
+		EventSystem.current.SetSelectedGameObject(chooseSong.transform.FindChild("Songs").transform.GetChild(0).gameObject, null);
+		chooseSong.transform.FindChild("Back").GetComponent<Button>().onClick.AddListener(() => backSong());
 		chooseSong.enabled = true;
-		buttonGrid = choosePart.transform.FindChild("ButtonGrid");
 	}
 	
 
 	public void selectSong(int i) {
-		chooseSong.enabled = false;
+		Destroy(chooseSong.gameObject);
+		choosePart = Instantiate(choosePartPrefab);
+		buttonGrid = choosePart.transform.FindChild("ButtonGrid");
 		sheet = sheets[i];
 		bpm = bpms[i];
 		getParts();
@@ -49,16 +74,27 @@ public class BuildSong : MonoBehaviour {
 
 			GameObject layoutButton = Instantiate(layoutButtonPrefab);
 			layoutButton.transform.SetParent(buttonGrid);
-			layoutButton.transform.GetChild(0).GetComponent<Text>().text = name;
+			layoutButton.GetComponent<Text>().text = name;
 			layoutButton.GetComponent<Button>().onClick.AddListener(() => readMusic(id));
 		}
 		choosePart.enabled = true;
+		EventSystem.current.SetSelectedGameObject(buttonGrid.transform.GetChild(0).gameObject, null);
+		choosePart.transform.FindChild("Back").GetComponent<Button>().onClick.AddListener(() => backPart());
+
 	}
 
 	private void readMusic(string playerId) {
 		//eventually need to check which type of xml doc this is
-		choosePart.enabled = false;
-		List<Song> songList = new List<Song>();
+
+		if (choosePart != null)
+		{
+			Destroy(choosePart.gameObject);
+		}
+		instructions = Instantiate(instructionsPrefab);
+		playerPartId = playerId;
+
+
+		songList = new List<Song>();
 		foreach (string id in partList)
 		{
 			XmlNode part = xmlDoc.SelectSingleNode("//part[@id='" + id + "']");
@@ -90,6 +126,7 @@ public class BuildSong : MonoBehaviour {
 			Song song = (Song)songObject.GetComponent(typeof(Song));
 			//check if playerPart
 			GameObject audioPlayerObject = Instantiate(audioPlayerPrefab);
+			audioPlayers.Add(audioPlayerObject);
 			AudioPlayer audioPlayer = (AudioPlayer)audioPlayerObject.GetComponent(typeof(AudioPlayer));
 			if (id == playerId) {
 				audioPlayer.volume = 0.5f;
@@ -166,13 +203,15 @@ public class BuildSong : MonoBehaviour {
 			}
 			songList.Add(song);
 		}
-
-		startSong(songList);
+		instructions.transform.FindChild("Continue").GetComponent<Button>().onClick.AddListener(() => cont());
+		EventSystem.current.SetSelectedGameObject(instructions.transform.FindChild("Continue").gameObject, null);
 	}
 
 	void startSong(List<Song> songList) {
-		Canvas songUi = Instantiate(songUiPrefab);
-		Player player = Instantiate(playerPrefab);
+		songUi = Instantiate(songUiPrefab);
+		player = Instantiate(playerPrefab);
+		polygonBuilder = Instantiate(polygonBuilderPrefab);
+		player.songBuilder = this;
 		polygonBuilder.player = player;
 		polygonBuilder.build();
 		player.songUi = songUi;
@@ -185,5 +224,106 @@ public class BuildSong : MonoBehaviour {
 	IEnumerator playPart(Song song) {
 		song.playSong();
 		yield return null;
+	}
+
+	void backSong() {
+		if (polygonBuilder != null) {
+			Destroy(polygonBuilder.gameObject);
+		}
+		if (choosePart != null) {
+			Destroy(polygonBuilder.gameObject);
+		}
+		if (chooseSong != null) {
+			Destroy(chooseSong.gameObject);
+		}
+		GameObject titleScreen = Instantiate(titleScreenPrefab);
+		EventSystem.current.SetSelectedGameObject(titleScreen.transform.FindChild("Start").gameObject, null);
+		Destroy(gameObject);
+	}
+
+	void backPart() {
+		partList.Clear();
+		if (choosePart != null)
+		{
+			Destroy(choosePart.gameObject);
+		}
+		chooseSong = Instantiate(chooseSongPrefab);
+		int i = 0;
+		foreach (Transform child in chooseSong.transform.FindChild("Songs").transform)
+		{
+			int index = i;
+			child.GetComponent<Button>().onClick.AddListener(() => selectSong(index));
+			i++;
+		}
+		EventSystem.current.SetSelectedGameObject(chooseSong.transform.FindChild("Songs").transform.GetChild(0).gameObject, null);
+		chooseSong.transform.FindChild("Back").GetComponent<Button>().onClick.AddListener(() => backSong());
+	}
+
+	void cont()
+	{
+		Destroy(instructions.gameObject);
+		startSong(songList);
+	}
+
+	void quitSong() {
+		clean();
+		backPart();
+	}
+
+	public void pause() {
+		if (pauseMenu == null)
+		{
+
+			Time.timeScale = 0;
+			prevFixedDeltaTime = Time.fixedDeltaTime;
+			Time.fixedDeltaTime = 0;
+
+			foreach (Song song in songList)
+			{
+				song.pause();
+			}
+			foreach (GameObject obj in audioPlayers)
+			{
+				AudioPlayer audioPlayer = (AudioPlayer)obj.GetComponent(typeof(AudioPlayer));
+				audioPlayer.pauseAll();
+			}
+
+			pauseMenu = Instantiate(pauseMenuPrefab);
+			EventSystem.current.SetSelectedGameObject(pauseMenu.transform.FindChild("Resume").gameObject, null);
+			pauseMenu.transform.FindChild("Resume").GetComponent<Button>().onClick.AddListener(() => resume());
+			pauseMenu.transform.FindChild("Quit").GetComponent<Button>().onClick.AddListener(() => quitSong());
+			pauseMenu.transform.FindChild("Restart").GetComponent<Button>().onClick.AddListener(() => restart());
+		}
+	}
+
+	void resume()
+	{
+		Destroy(pauseMenu);
+		Time.timeScale = 1;
+		Time.fixedDeltaTime = prevFixedDeltaTime;
+		player.resume();
+	}
+
+	void restart() {
+		clean();
+		readMusic(playerPartId);
+	}
+
+	void clean() {
+		foreach (Song song in songList)
+		{
+			song.destroy();
+		}
+		songList.Clear();
+		foreach (GameObject audioPlayer in audioPlayers) {
+			Destroy(audioPlayer.gameObject);
+		}
+		audioPlayers.Clear();
+		Destroy(polygonBuilder.gameObject);
+		Destroy(player.gameObject);
+		Destroy(songUi.gameObject);
+		Destroy(pauseMenu.gameObject);
+		Time.timeScale = 1;
+		Time.fixedDeltaTime = prevFixedDeltaTime;
 	}
 }

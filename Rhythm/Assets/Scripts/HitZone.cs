@@ -6,13 +6,17 @@ using System.Collections.Generic;
 public class HitZone : MonoBehaviour
 {
 	public Material inactiveMat;
-	public Material activeMat;
+	public Material prevMat;
+	public Material playMat;
 	private bool active = false;
 	private InputControl control1 = null;
 	private InputControl control2 = null;
 	private List<Note> playerNotes = new List<Note>();
 	public Player player;
 	private Light pointLight;
+	private bool playing = false;
+	private bool paused = false;
+	public Color noteColor;
 	//private ParticleSystem particle;
 
 
@@ -21,6 +25,7 @@ public class HitZone : MonoBehaviour
 	void Start()
 	{
 		GetComponent<Renderer>().material = inactiveMat;
+		prevMat = inactiveMat;
 		pointLight = GetComponent<Light>();
 
 		//particle = GetComponent<ParticleSystem>();
@@ -49,9 +54,7 @@ public class HitZone : MonoBehaviour
 					playerNotes.Add(playerNote);
 				}
 				if (playerNote == playerNotes[0]) {
-					playerNote.play();
-					StartCoroutine("scoring");
-					pointLight.enabled = true;
+					playNote(playerNote, GetComponent<Renderer>().material);
 				}
 			}
 		}
@@ -63,14 +66,10 @@ public class HitZone : MonoBehaviour
 			Note note = (Note)col.gameObject.GetComponent(typeof(Note));
 			if (note.isPlaying && note == playerNotes[0])
 			{
-				note.stop();
-				StopCoroutine("scoring");
-				pointLight.enabled = false;
+				stopNote(note);
 				playerNotes.RemoveAt(0);
 				if (playerNotes.Count > 0) {
-					playerNotes[0].play();
-					StartCoroutine("scoring");
-					pointLight.enabled = true;
+					playNote(playerNotes[0], GetComponent<Renderer>().material);
 				}
 			}
 		}
@@ -95,13 +94,18 @@ public class HitZone : MonoBehaviour
 	{
 		if (control == control1) {
 			control1 = null;
-			GetComponent<Renderer>().material = mat;
+			if (!playing)
+			{
+				GetComponent<Renderer>().material = mat;
+			}
 
 		}
 		else if (control == control2) {
 			control2 = null;
-			GetComponent<Renderer>().material = mat;
-
+			if (!playing)
+			{
+				GetComponent<Renderer>().material = mat;
+			}
 		}
 
 		if (control1 == null && control2 == null)
@@ -111,12 +115,12 @@ public class HitZone : MonoBehaviour
 			foreach (Note playerNote in playerNotes) {
 				if (playerNote != null)
 				{
-					playerNote.stop();
-					StopCoroutine("scoring");
-					pointLight.enabled = false;
+					stopNote(playerNote);
+
 				}
 			}
 			playerNotes.Clear();
+			GetComponent<Renderer>().material = inactiveMat;
 		}
 	}
 
@@ -125,5 +129,34 @@ public class HitZone : MonoBehaviour
 			player.score += 1;
 			yield return new WaitForFixedUpdate();
 		}
+	}
+
+	void playNote(Note note, Material mat) {
+		if (!paused)
+		{
+			playing = true;
+			note.play();
+			note.GetComponent<Renderer>().material.SetColor("_TintColor", noteColor);
+			StartCoroutine("scoring");
+			pointLight.enabled = true;
+			GetComponent<Renderer>().material = playMat;
+			prevMat = mat;
+		}
+	}
+
+	void stopNote(Note note) {
+		playing = false;
+		note.stop();
+		StopCoroutine("scoring");
+		pointLight.enabled = false;
+		GetComponent<Renderer>().material = prevMat;
+	}
+
+	public void pause() {
+		paused = true;
+	}
+
+	public void resume() {
+		paused = false;
 	}
 }

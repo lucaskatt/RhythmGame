@@ -19,6 +19,7 @@ public class Note : MonoBehaviour
 	public Color color;
 	private float alphaRate = 0.001f;
 	private Color newColor;
+	private float playTime;
 
 
 	void Start() {
@@ -83,19 +84,27 @@ public class Note : MonoBehaviour
 	public void play()
 	{
 		isPlaying = true;
-		player.startNoteAudio(this);
+		player.startNoteAudio(this, playTime);
 	}
 
 	public void stop()
 	{
-		isPlaying = false;
-		player.stopNoteAudio(this);
+		if (player != null)
+		{
+			isPlaying = false;
+			player.stopNoteAudio(this);
+		}
 	}
 
-	public void startMovement(float _speed, float hitDist, float playTime)
+	public void chordColor() {
+		newColor = new Color(newColor.r - 0.3f, newColor.g + 0.2f, newColor.b, newColor.a);
+	}
+
+	public void startMovement(float _speed, float hitDist, float _playTime)
 	{
 		if (step != 'R')
 		{
+			playTime = _playTime;
 			speed = _speed;
 
 			float yScale = (speed * playTime - hitDist);

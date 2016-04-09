@@ -18,6 +18,7 @@ public class Player : MonoBehaviour {
 	public Canvas songUi;
 	public int score = 0;
 	private Text scoreText;
+	public BuildSong songBuilder;
 
 	// Use this for initialization
 	void Start () {
@@ -27,10 +28,28 @@ public class Player : MonoBehaviour {
 		rightCursor.GetComponent<MeshRenderer>().enabled = false;
 		leftCursorVisible = Instantiate(leftCursorPrefab);
 		rightCursorVisible = Instantiate(rightCursorPrefab);
+
+		leftCursorVisible.transform.SetParent(transform);
+		leftCursor.transform.SetParent(transform);
+		rightCursor.transform.SetParent(transform);
+		rightCursorVisible.transform.SetParent(transform);
+
 		rightCursorVisible.transform.position = new Vector3(0, 0, 1);
+
 
 		sideLength = polygonBuilder.sideLength;
 		scoreText = songUi.transform.FindChild("Score").GetComponent<Text>();
+	}
+
+	public void resume() {
+		if (activeZoneLeft != null)
+		{
+			activeZoneLeft.resume();
+		}
+		if (activeZoneRight != null)
+		{
+			activeZoneRight.resume();
+		}
 	}
 	
 	// Update is called once per frame
@@ -38,8 +57,16 @@ public class Player : MonoBehaviour {
 
 		device = InputManager.ActiveDevice;
 
-		if (Input.GetKeyDown(KeyCode.Escape)) {
-			Application.Quit();
+		if (Input.GetKeyDown(KeyCode.Escape) || device.Command.WasPressed) {
+			songBuilder.pause();
+			if (activeZoneLeft != null)
+			{
+				activeZoneLeft.pause();
+			}
+			if (activeZoneRight != null)
+			{
+				activeZoneRight.pause();
+			}
 		}
 
 		if (device.LeftStick.Value != device.LeftStick.LastValue) {
