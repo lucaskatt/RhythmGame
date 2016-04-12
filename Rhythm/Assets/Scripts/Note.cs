@@ -20,12 +20,14 @@ public class Note : MonoBehaviour
 	private float alphaRate = 0.001f;
 	private Color newColor;
 	private float playTime;
+	public AudioSource keysStem;
 
 
 	void Start() {
 		rigid = GetComponent<Rigidbody>();
 		newColor = color;
-	}
+		keysStem = GameObject.Find("KeysStem").GetComponent<AudioSource>();
+  }
 
 	void FixedUpdate() {
 		if (traveling) {
@@ -84,7 +86,8 @@ public class Note : MonoBehaviour
 	public void play()
 	{
 		isPlaying = true;
-		player.startNoteAudio(this, playTime);
+		//player.startNoteAudio(this, playTime);
+		keysStem.volume = 0.6f;
 	}
 
 	public void stop()
@@ -92,7 +95,8 @@ public class Note : MonoBehaviour
 		if (player != null)
 		{
 			isPlaying = false;
-			player.stopNoteAudio(this);
+			//player.stopNoteAudio(this);
+			//keysStem.volume = 0;
 		}
 	}
 

@@ -36,6 +36,10 @@ public class BuildSong : MonoBehaviour {
 	private float prevFixedDeltaTime;
 	private string playerPartId;
 	private List<GameObject> audioPlayers = new List<GameObject>();
+	private bool test = false;
+	private int playerPos = 0;
+	private List<AudioSource> stems = new List<AudioSource>();
+
 
 
 	// Use this for initialization
@@ -50,6 +54,12 @@ public class BuildSong : MonoBehaviour {
 		EventSystem.current.SetSelectedGameObject(chooseSong.transform.FindChild("Songs").transform.GetChild(0).gameObject, null);
 		chooseSong.transform.FindChild("Back").GetComponent<Button>().onClick.AddListener(() => backSong());
 		chooseSong.enabled = true;
+		stems.Add(GameObject.Find("DrumsStem").GetComponent<AudioSource>());
+		stems.Add(GameObject.Find("GuitarStem").GetComponent<AudioSource>());
+		stems.Add(GameObject.Find("KeysStem").GetComponent<AudioSource>());
+		stems.Add(GameObject.Find("RhythmStem").GetComponent<AudioSource>());
+		stems.Add(GameObject.Find("SongStem").GetComponent<AudioSource>());
+		stems.Add(GameObject.Find("VocalsStem").GetComponent<AudioSource>());
 	}
 	
 
@@ -59,6 +69,9 @@ public class BuildSong : MonoBehaviour {
 		buttonGrid = choosePart.transform.FindChild("ButtonGrid");
 		sheet = sheets[i];
 		bpm = bpms[i];
+		if (i == 5) {
+			test = true;
+		}
 		getParts();
 	}
 
@@ -95,6 +108,7 @@ public class BuildSong : MonoBehaviour {
 
 
 		songList = new List<Song>();
+		int count = 0;
 		foreach (string id in partList)
 		{
 			XmlNode part = xmlDoc.SelectSingleNode("//part[@id='" + id + "']");
@@ -130,6 +144,7 @@ public class BuildSong : MonoBehaviour {
 			AudioPlayer audioPlayer = (AudioPlayer)audioPlayerObject.GetComponent(typeof(AudioPlayer));
 			if (id == playerId) {
 				audioPlayer.volume = 0.5f;
+				playerPos = count;
 				song.init(bpm, divisions, beatType, true);
 			}
 			else {
@@ -202,6 +217,7 @@ public class BuildSong : MonoBehaviour {
 
 			}
 			songList.Add(song);
+			count++;
 		}
 		instructions.transform.FindChild("Continue").GetComponent<Button>().onClick.AddListener(() => cont());
 		EventSystem.current.SetSelectedGameObject(instructions.transform.FindChild("Continue").gameObject, null);
@@ -216,6 +232,10 @@ public class BuildSong : MonoBehaviour {
 		polygonBuilder.build();
 		player.songUi = songUi;
 		player.polygonBuilder = polygonBuilder;
+		
+		if (test) {
+			playPart(songList[playerPos]);
+		}
 		foreach (Song song in songList) {
 			StartCoroutine(playPart(song));
 		}
@@ -323,6 +343,10 @@ public class BuildSong : MonoBehaviour {
 		Destroy(player.gameObject);
 		Destroy(songUi.gameObject);
 		Destroy(pauseMenu.gameObject);
+		foreach (AudioSource stem in stems)
+		{
+			stem.Stop();
+		}
 		Time.timeScale = 1;
 		Time.fixedDeltaTime = prevFixedDeltaTime;
 	}

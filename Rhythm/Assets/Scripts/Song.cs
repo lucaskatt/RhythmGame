@@ -18,6 +18,9 @@ public class Song : MonoBehaviour {
 	private int poolPos = 0;
 	public GameObject notePrefab;
 	private bool paused = false;
+	public bool test = false;
+	private List<AudioSource> stems = new List<AudioSource>();
+	public float stemDelay = 2f;
 
 	public struct NoteStruct{
 		public char step;
@@ -216,6 +219,14 @@ public class Song : MonoBehaviour {
 				pool.Add(note);
 			}
 		}
+		if (test) {
+			stems.Add(GameObject.Find("DrumsStem").GetComponent<AudioSource>());
+			stems.Add(GameObject.Find("GuitarStem").GetComponent<AudioSource>());
+			stems.Add(GameObject.Find("KeysStem").GetComponent<AudioSource>());
+			stems.Add(GameObject.Find("RhythmStem").GetComponent<AudioSource>());
+			stems.Add(GameObject.Find("SongStem").GetComponent<AudioSource>());
+			stems.Add(GameObject.Find("VocalsStem").GetComponent<AudioSource>());
+		}
 	}
 
 	// Use this for initialization
@@ -236,8 +247,21 @@ public class Song : MonoBehaviour {
 		if (nextNote < song.Count) {
 			beatFactor = beatType / (4 * divisions * bps);
 
-			StartCoroutine(playNote(song[nextNote]));
+			if (test) {
+				StartCoroutine(playStems());
+				StartCoroutine(delayStart());
+			}
+
+			else{
+				StartCoroutine(playNote(song[nextNote]));
+			}
 		}
+	}
+
+	IEnumerator delayStart() {
+		yield return new WaitForSeconds(stemDelay);
+		StartCoroutine(playNote(song[nextNote]));
+		yield return null;
 	}
 
 	IEnumerator playNote(NoteStruct noteStruct) {
@@ -305,11 +329,22 @@ public class Song : MonoBehaviour {
 	}
 
 	IEnumerator playNoteDelayed(NoteStruct noteStruct, float delay) {
-		yield return new WaitForSeconds(delay);
-		float playTime = playTimeNoteStruct(noteStruct);
-		noteStruct.play(playTime);
-		yield return new WaitForSeconds(playTime);
-		noteStruct.stop();
+		if (!test)
+		{
+			yield return new WaitForSeconds(delay);
+			float playTime = playTimeNoteStruct(noteStruct);
+			noteStruct.play(playTime);
+			yield return new WaitForSeconds(playTime);
+			noteStruct.stop();
+		}
+	}
+
+	IEnumerator playStems() {
+		yield return new WaitForSeconds(noteDelay);
+		foreach (AudioSource stem in stems) {
+			stem.Play();
+		}
+		yield return null;
 	}
 
 	private float playTimeNote(Note note) {

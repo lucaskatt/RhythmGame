@@ -17,6 +17,7 @@ public class HitZone : MonoBehaviour
 	private bool playing = false;
 	private bool paused = false;
 	public Color noteColor;
+	private AudioSource keysStem;
 	//private ParticleSystem particle;
 
 
@@ -27,6 +28,8 @@ public class HitZone : MonoBehaviour
 		GetComponent<Renderer>().material = inactiveMat;
 		prevMat = inactiveMat;
 		pointLight = GetComponent<Light>();
+		keysStem = GameObject.Find("KeysStem").GetComponent<AudioSource>();
+
 
 		//particle = GetComponent<ParticleSystem>();
 	}
@@ -41,6 +44,9 @@ public class HitZone : MonoBehaviour
 		if (col.gameObject.tag == "Note") {
 			Note note = (Note)col.gameObject.GetComponent(typeof(Note));
 			note.traveling = false;
+			if (!active) {
+				keysStem.volume = 0f;
+			}
 		}
 	}
 
